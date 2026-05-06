@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="韓國記帳">
+<meta name="theme-color" content="#312E81">
+<title>韓國旅遊記帳</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans TC',-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;background:#FAFAFA;color:#111827;font-size:14px;-webkit-font-smoothing:antialiased}
+.app{max-width:420px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;background:#FAFAFA}
+.page{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+input,button,select,textarea{font-family:inherit;font-size:inherit}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+
+/* Bottom nav */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #F3F4F6;display:flex;justify-content:space-around;padding:8px 0 max(12px,env(safe-area-inset-bottom));z-index:100}
+.nav-btn{display:flex;flex-direction:column;align-items:center;background:none;border:none;cursor:pointer;padding:4px 16px;color:#9CA3AF;font-size:10px;gap:2px;transition:color .2s}
+.nav-btn.active{color:#4F46E5;font-weight:600}
+.nav-icon{font-size:20px;line-height:1}
+
+/* Hero card */
+.hero{margin:0 14px 14px;background:linear-gradient(135deg,#312E81,#4338CA);border-radius:16px;padding:20px;color:#fff}
+.hero-subs{display:flex;gap:8px;margin-top:14px}
+.hero-sub{flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:10px}
+
+/* Section */
+.section{padding:0 14px;margin-bottom:14px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+
+/* Cards */
+.mini-card{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid #F3F4F6;transition:opacity .3s}
+.mini-card.faded{opacity:.45}
+.full-card{background:#fff;border:1px solid #F3F4F6;border-radius:14px;padding:14px;margin-bottom:10px;transition:opacity .3s}
+.full-card.faded{opacity:.5}
+
+/* Progress bar */
+.bar-track{background:#E5E7EB;border-radius:99px;height:6px;overflow:hidden}
+.bar-track.lg{height:8px}
+.bar-fill{height:100%;border-radius:99px;transition:width .5s ease,background .3s}
+.bar-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#9CA3AF}
+
+/* Badge */
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.badge-green{background:#DCFCE7;color:#16A34A}
+.badge-red{background:#FEE2E2;color:#DC2626}
+
+/* Icon circle */
+.icon-c{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.icon-c.lg{width:38px;height:38px;border-radius:10px;font-size:16px}
+
+/* Record row */
+.rec-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F4F6}
+.rec-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+
+/* Add page */
+.amount-input{font-size:36px;font-weight:700;border:none;outline:none;background:transparent;text-align:center;width:75%;color:#111827;font-family:inherit}
+.field-group{margin-bottom:16px}
+.field-label{font-size:12px;color:#9CA3AF;display:block;margin-bottom:6px}
+.text-input{width:100%;padding:10px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px;outline:none;background:#fff;color:#111827}
+.text-input:focus{border-color:#4F46E5}
+.cat-pills{display:flex;flex-wrap:wrap;gap:8px}
+.cat-pill{padding:6px 14px;border-radius:99px;font-size:13px;border:1px solid #E5E7EB;background:#fff;cursor:pointer;color:#6B7280}
+.cat-pill.active{background:#EEF2FF;border-color:#4F46E5;color:#4F46E5;font-weight:600}
+.pay-list{border:1px solid #E5E7EB;border-radius:12px;overflow:hidden}
+.pay-item{display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;border:none;border-bottom:1px solid #F3F4F6;background:#fff;cursor:pointer;text-align:left}
+.pay-item.active{background:#EEF2FF;border-left:3px solid #4F46E5}
+.pay-item.faded{opacity:.45}
+.pay-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.method-pills{display:flex;gap:8px}
+.method-pill{flex:1;text-align:center;padding:8px;border-radius:10px;font-size:13px;border:1px solid #E5E7EB;background:#fff;cursor:pointer;color:#6B7280}
+.method-pill.active{background:#EEF2FF;border-color:#4F46E5;color:#4F46E5;font-weight:600}
+.submit-btn{width:100%;padding:14px;border-radius:12px;background:#4F46E5;color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;margin-bottom:8px}
+.submit-btn:active{transform:scale(.98)}
+.cashback-preview{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F9FAFB;border-radius:10px;margin-bottom:16px}
+
+/* Toggle */
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #F3F4F6}
+.toggle-track{width:44px;height:24px;border-radius:99px;border:none;position:relative;cursor:pointer;padding:0;flex-shrink:0;transition:background .25s}
+.toggle-knob{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-track.on .toggle-knob{transform:translateX(20px)}
+
+/* Filter pills */
+.filter-row{display:flex;gap:6px;padding:0 14px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-pill{padding:6px 12px;border-radius:99px;font-size:12px;border:1px solid #E5E7EB;background:#fff;cursor:pointer;white-space:nowrap;color:#6B7280;flex-shrink:0}
+.filter-pill.active{background:#312E81;border-color:#312E81;color:#fff;font-weight:600}
+
+/* Day header */
+.day-header{display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-bottom:4px;font-size:13px;font-weight:600;color:#111827}
+
+/* Delete */
+.del-bar{display:flex;gap:8px;padding:8px 0;justify-content:flex-end}
+.del-btn{padding:6px 16px;border-radius:8px;background:#FEE2E2;color:#DC2626;border:none;font-size:13px;cursor:pointer;font-weight:600}
+.cancel-btn{padding:6px 16px;border-radius:8px;background:#F3F4F6;color:#6B7280;border:none;font-size:13px;cursor:pointer}
+
+/* Warning */
+.full-warning{margin-top:8px;padding:8px 10px;background:#FEF2F2;border-radius:8px;font-size:12px;color:#DC2626}
+
+/* Progress box */
+.progress-box{background:#F9FAFB;border-radius:10px;padding:10px;margin-bottom:10px}
+.progress-labels{display:flex;justify-content:space-between;font-size:12px;color:#9CA3AF;margin-bottom:6px}
+
+/* Shake animation */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s}
+
+/* Link button */
+.link-btn{font-size:12px;color:#6B7280;background:none;border:none;cursor:pointer;padding:0}
+.back-btn{width:32px;height:32px;border-radius:99px;border:none;background:#F3F4F6;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6B7280}
+
+/* Utility */
+.flex{display:flex}.items-center{align-items:center}.gap-8{gap:8px}.gap-10{gap:10px}.gap-12{gap:12px}.flex-1{flex:1;min-width:0}.text-right{text-align:right}.flex-shrink-0{flex-shrink:0}
+.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+// ─── DATA ───
+const KRW_TO_TWD=0.024;
+const CATEGORIES=[
+{id:"food",label:"餐飲",icon:"🍜"},{id:"transport",label:"交通",icon:"🚌"},
+{id:"shopping",label:"購物",icon:"🛍"},{id:"entertainment",label:"娛樂",icon:"🎫"},
+{id:"accommodation",label:"住宿",icon:"🏨"},{id:"other",label:"其他",icon:"📌"}
+];
+const CAT_COLORS={food:{bg:"#FFF3E0",fg:"#E65100"},transport:{bg:"#E3F2FD",fg:"#1565C0"},shopping:{bg:"#FCE4EC",fg:"#AD1457"},entertainment:{bg:"#F3E5F5",fg:"#7B1FA2"},accommodation:{bg:"#E8F5E9",fg:"#2E7D32"},other:{bg:"#F5F5F5",fg:"#616161"}};
+const PM_LABELS={apple_pay:"Apple Pay",physical_card:"實體卡",qr_code:"QR碼"};
+
+const DEFAULT_PAYMENTS=[
+{id:"easycard",name:"悠遊付",subtitle:"綁彰化銀行",color:"#0EA573",icon:"📱",cashback:18.5,limit:250000,used:0,hasQuota:true,isFull:false,stores:"CU、7-11、GS25、emart24、樂天免稅店",howTo:"找 TWQR 標誌，喊「PAYBOOK」",payMethods:["qr_code"]},
+{id:"linepay_cvs",name:"LINE PAY (超商)",subtitle:"綁大衛卡",color:"#06C755",icon:"💚",cashback:15,limit:230000,used:0,hasQuota:true,isFull:false,stores:"CU、Emart、7-11",howTo:"CU/Emart 喊 LINE PAY，7-11 出示 QR code",payMethods:["qr_code"]},
+{id:"linepay_duty",name:"LINE PAY (免稅店)",subtitle:"綁大衛卡",color:"#06C755",icon:"💚",cashback:30,limit:460000,used:0,hasQuota:true,isFull:false,stores:"新世界免稅店",howTo:"",payMethods:["qr_code"]},
+{id:"icash",name:"icash Pay",subtitle:"假日滿200疊加7%",color:"#E85D2A",icon:"🧡",cashback:15,limit:250000,used:0,hasQuota:true,isFull:false,stores:"CU、7-11、GS25、emart24",howTo:"找 TWQR，喊「PAYBOOK」",payMethods:["qr_code"]},
+{id:"andy_dbs",name:"ANDY 星展ECO",subtitle:"信用卡",color:"#E4002B",icon:"💳",cashback:5,limit:700000,used:0,hasQuota:false,isFull:false,stores:"所有地方",howTo:"Apple Pay 或實體卡",payMethods:["apple_pay","physical_card"]},
+{id:"yishan_dbs",name:"YISHAN 星展ECO",subtitle:"信用卡",color:"#E4002B",icon:"💳",cashback:5,limit:700000,used:0,hasQuota:false,isFull:false,stores:"所有地方",howTo:"Apple Pay 或實體卡",payMethods:["apple_pay","physical_card"]},
+{id:"yishan_sinopac",name:"YISHAN 永豐大戶卡",subtitle:"信用卡",color:"#1A56DB",icon:"💳",cashback:4.5,limit:740000,used:0,hasQuota:false,isFull:false,stores:"所有地方",howTo:"Apple Pay 或實體卡",payMethods:["apple_pay","physical_card"]}
+];
+
+// ─── STATE ───
+let state={page:"home",payments:JSON.parse(JSON.stringify(DEFAULT_PAYMENTS)),records:[],addForm:{amount:"",storeName:"",category:"food",paymentId:"easycard",payMethod:"qr_code",note:"",date:getToday()},filter:"all",confirmDelete:null};
+
+function loadState(){
+try{const d=localStorage.getItem("korea-tracker-v2");if(d){const p=JSON.parse(d);if(p.payments)state.payments=p.payments;if(p.records)state.records=p.records;}}catch(e){console.log("load error",e)}
+}
+function saveState(){
+try{localStorage.setItem("korea-tracker-v2",JSON.stringify({payments:state.payments,records:state.records}))}catch(e){}
+}
+
+// ─── HELPERS ───
+function formatKRW(n){return"₩"+Math.round(n).toLocaleString()}
+function formatTWD(n){return"NT$"+Math.round(n).toLocaleString()}
+function krwToTwd(k){return Math.round(k*KRW_TO_TWD)}
+function getToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function formatDateLabel(s){const d=new Date(s+"T00:00:00");const days=["日","一","二","三","四","五","六"];const m=d.getMonth()+1;const day=d.getDate();const w=days[d.getDay()];return m+"月"+day+"日 ("+w+")"+(s===getToday()?" · 今天":"")}
+function getCat(id){return CATEGORIES.find(c=>c.id===id)||CATEGORIES[5]}
+function getPay(id){return state.payments.find(p=>p.id===id)}
+
+// ─── RENDER ───
+function render(){
+const app=document.getElementById("app");
+let html=`<div class="page" id="pageContent">`;
+if(state.page==="home")html+=renderHome();
+else if(state.page==="add")html+=renderAdd();
+else if(state.page==="cards")html+=renderCards();
+else if(state.page==="records")html+=renderRecords();
+html+=`</div>`;
+html+=renderNav();
+app.innerHTML=html;
+bindEvents();
+}
+
+function renderNav(){
+const items=[{id:"home",label:"首頁",icon:"⌂"},{id:"add",label:"記帳",icon:"＋"},{id:"cards",label:"卡片",icon:"▭"},{id:"records",label:"紀錄",icon:"☰"}];
+let h=`<div class="bottom-nav">`;
+items.forEach(i=>{
+h+=`<button class="nav-btn${state.page===i.id?" active":""}" data-nav="${i.id}"><span class="nav-icon">${i.icon}</span><span>${i.label}</span></button>`;
+});
+return h+`</div>`;
+}
+
+// ─── HOME ───
+function renderHome(){
+const total=state.records.reduce((s,r)=>s+r.amount,0);
+const cashback=state.records.reduce((s,r)=>s+Math.round(r.amount*(r.effectiveCashback/100)),0);
+const todayRecs=state.records.filter(r=>r.date===getToday());
+const todayTotal=todayRecs.reduce((s,r)=>s+r.amount,0);
+const quotaPays=state.payments.filter(p=>p.hasQuota);
+
+let h=`<div style="padding:16px 18px 12px"><div style="font-size:13px;color:#9CA3AF">韓國旅遊記帳</div><div style="font-size:21px;font-weight:600;margin-top:4px">✈ 韓國之旅</div></div>`;
+
+h+=`<div class="hero"><div style="font-size:12px;opacity:.7">總花費</div><div style="font-size:28px;font-weight:700;margin-top:4px">${formatKRW(total)}</div><div style="font-size:13px;opacity:.7;margin-top:2px">≈ ${formatTWD(krwToTwd(total))}</div><div class="hero-subs"><div class="hero-sub"><div style="font-size:11px;opacity:.6">已省回饋</div><div style="font-size:15px;font-weight:600;margin-top:3px">${formatKRW(cashback)}</div></div><div class="hero-sub"><div style="font-size:11px;opacity:.6">今日花費</div><div style="font-size:15px;font-weight:600;margin-top:3px">${formatKRW(todayTotal)}</div></div></div></div>`;
+
+h+=`<div class="section"><div class="section-head"><span style="font-size:14px;font-weight:600">支付額度追蹤</span><button class="link-btn" data-nav="cards">查看全部 →</button></div>`;
+quotaPays.forEach(p=>{
+const pct=p.limit>0?Math.min(100,Math.round(p.used/p.limit*100)):0;
+const barCol=p.isFull?"#D1D5DB":p.color;
+h+=`<div class="mini-card${p.isFull?" faded":""}"><div class="flex items-center" style="justify-content:space-between;margin-bottom:8px"><div class="flex items-center gap-8"><div class="icon-c" style="background:${p.isFull?"#D1D5DB":p.color}">${p.icon}</div><div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:11px;color:#9CA3AF">回饋 ${p.cashback}%</div></div></div><span class="badge ${p.isFull?"badge-red":"badge-green"}">${p.isFull?"已滿額":"未滿額"}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barCol}"></div></div><div class="bar-labels"><span>${formatKRW(p.used)} 已用</span><span>${formatKRW(p.limit)}</span></div></div>`;
+});
+h+=`</div>`;
+
+h+=`<div class="section"><div style="font-size:14px;font-weight:600;margin-bottom:8px">今日消費</div>`;
+if(todayRecs.length===0){
+h+=`<div style="font-size:13px;color:#9CA3AF;padding:20px 0;text-align:center">今天還沒有消費紀錄</div>`;
+}else{
+todayRecs.forEach(r=>{h+=renderRecordRow(r)});
+}
+h+=`</div>`;
+return h;
+}
+
+function renderRecordRow(r){
+const cat=getCat(r.category);const cc=CAT_COLORS[r.category]||CAT_COLORS.other;
+return `<div class="rec-row"><div class="rec-icon" style="background:${cc.bg}">${cat.icon}</div><div class="flex-1" style="min-width:0"><div style="font-size:13px;font-weight:600" class="truncate">${r.storeName||cat.label}</div><div style="font-size:11px;color:#9CA3AF" class="truncate">${cat.label} · ${r.paymentName}${r.payMethod?" · "+(PM_LABELS[r.payMethod]||""):""}</div></div><div class="text-right flex-shrink-0"><div style="font-size:13px;font-weight:600">${formatKRW(r.amount)}</div><div style="font-size:11px;color:#9CA3AF">${formatTWD(krwToTwd(r.amount))}</div></div></div>`;
+}
+
+// ─── ADD ───
+function renderAdd(){
+const f=state.addForm;
+const sortedPays=[...state.payments.filter(p=>!p.isFull),...state.payments.filter(p=>p.isFull)];
+const selPay=getPay(f.paymentId);
+const numVal=parseInt(f.amount)||0;
+
+let h=`<div class="flex items-center" style="justify-content:space-between;padding:12px 18px"><button class="back-btn" data-nav="home">✕</button><span style="font-size:16px;font-weight:600">新增消費</span><span style="width:32px"></span></div>`;
+
+h+=`<div id="amountArea" style="text-align:center;padding:18px 20px 22px"><div style="font-size:12px;color:#9CA3AF;margin-bottom:8px">消費金額</div><div class="flex items-center" style="justify-content:center;gap:4px"><span style="font-size:18px;color:#9CA3AF">₩</span><input type="number" inputmode="numeric" placeholder="0" value="${f.amount}" class="amount-input" data-field="amount"></div>`;
+if(numVal>0)h+=`<div style="font-size:13px;color:#9CA3AF;margin-top:6px">≈ ${formatTWD(krwToTwd(numVal))}</div>`;
+h+=`</div>`;
+
+h+=`<div style="padding:0 18px">`;
+
+h+=`<div class="field-group"><label class="field-label">店家名稱</label><input type="text" placeholder="例：明洞餃子" value="${f.storeName}" class="text-input" data-field="storeName"></div>`;
+
+h+=`<div class="field-group"><label class="field-label">消費類別</label><div class="cat-pills">`;
+CATEGORIES.forEach(c=>{h+=`<button class="cat-pill${f.category===c.id?" active":""}" data-cat="${c.id}">${c.icon} ${c.label}</button>`});
+h+=`</div></div>`;
+
+h+=`<div class="field-group"><label class="field-label">支付方式</label><div class="pay-list">`;
+sortedPays.forEach(p=>{
+const isSel=f.paymentId===p.id;const rem=Math.max(0,p.limit-p.used);
+h+=`<button class="pay-item${isSel?" active":""}${p.isFull?" faded":""}" data-pay="${p.id}"><div class="pay-icon" style="background:${p.isFull?"#D1D5DB":p.color}">${p.icon}</div><div class="flex-1" style="min-width:0"><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:11px;color:#9CA3AF">${p.isFull?"0% · 已滿額":p.cashback+"% · 剩餘 "+formatKRW(rem)}</div></div>${isSel?'<span style="color:#4F46E5;font-size:16px">✓</span>':""}</button>`;
+});
+h+=`</div></div>`;
+
+if(selPay&&selPay.payMethods.length>1){
+h+=`<div class="field-group"><label class="field-label">付款方式</label><div class="method-pills">`;
+selPay.payMethods.forEach(pm=>{h+=`<button class="method-pill${f.payMethod===pm?" active":""}" data-method="${pm}">${PM_LABELS[pm]}</button>`});
+h+=`</div></div>`;
+}
+
+h+=`<div class="field-group"><label class="field-label">日期</label><input type="date" value="${f.date}" class="text-input" data-field="date"></div>`;
+
+h+=`<div class="field-group"><label class="field-label">備註 (選填)</label><input type="text" placeholder="例：午餐兩碗餃子湯" value="${f.note}" class="text-input" data-field="note"></div>`;
+
+if(numVal>0&&selPay){
+const cbAmt=selPay.isFull?0:Math.round(numVal*(selPay.cashback/100));
+h+=`<div class="cashback-preview"><span style="font-size:13px;color:#6B7280">預估回饋</span><span style="font-size:15px;font-weight:600;color:${selPay.isFull?"#DC2626":"#16A34A"}">${selPay.isFull?"無回饋 (已滿額)":formatKRW(cbAmt)+" ("+selPay.cashback+"%)"}</span></div>`;
+}
+
+h+=`<button class="submit-btn" id="submitBtn">✓ 儲存紀錄</button>`;
+h+=`</div>`;
+return h;
+}
+
+// ─── CARDS ───
+function renderCards(){
+let h=`<div style="padding:16px 18px 12px"><div style="font-size:21px;font-weight:600">▭ 支付方式管理</div><div style="font-size:13px;color:#9CA3AF;margin-top:4px">${state.payments.length} 種支付方式 · 額度與回饋追蹤</div></div>`;
+h+=`<div style="padding:0 14px">`;
+state.payments.forEach(p=>{
+const pct=p.limit>0?Math.min(100,Math.round(p.used/p.limit*100)):0;
+const rem=Math.max(0,p.limit-p.used);
+const barCol=p.isFull?"#D1D5DB":p.color;
+
+h+=`<div class="full-card${p.isFull?" faded":""}">`;
+h+=`<div class="flex" style="justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div class="flex items-center gap-10"><div class="icon-c lg" style="background:${p.isFull?"#D1D5DB":p.color}">${p.icon}</div><div><div style="font-size:14px;font-weight:600">${p.name}</div><div style="font-size:11px;color:#9CA3AF">${p.subtitle} · 回饋 ${p.cashback}%</div></div></div>`;
+if(p.hasQuota)h+=`<span class="badge ${p.isFull?"badge-red":"badge-green"}">${p.isFull?"已滿額":"未滿額"}</span>`;
+h+=`</div>`;
+
+h+=`<div class="progress-box"><div class="progress-labels"><span>已用 ${formatKRW(p.used)}</span><span style="font-weight:600;color:#111827">上限 ${formatKRW(p.limit)}</span></div><div class="bar-track lg"><div class="bar-fill" style="width:${pct}%;background:${barCol}"></div></div><div style="font-size:11px;color:#9CA3AF;margin-top:4px">剩餘 ${formatKRW(rem)}</div></div>`;
+
+h+=`<div style="font-size:12px;color:#6B7280;line-height:1.7">`;
+if(p.stores)h+=`<div>🏪 ${p.stores}</div>`;
+if(p.howTo)h+=`<div>📢 ${p.howTo}</div>`;
+h+=`</div>`;
+
+if(p.hasQuota){
+h+=`<div class="toggle-wrap"><div class="toggle-track${p.isFull?" on":""}" style="background:${p.isFull?"#DC2626":"#D1D5DB"}" data-toggle="${p.id}"><div class="toggle-knob"></div></div><span style="font-size:13px;color:${p.isFull?"#DC2626":"#6B7280"}">${p.isFull?"已標記滿額":"標記為已滿額"}</span></div>`;
+}
+if(p.isFull)h+=`<div class="full-warning">⚠ 回饋已結束 — 記帳時此支付方式回饋計為 0%</div>`;
+h+=`</div>`;
+});
+h+=`</div>`;
+return h;
+}
+
+// ─── RECORDS ───
+function renderRecords(){
+const f=state.filter;
+const filtered=f==="all"?state.records:state.records.filter(r=>r.category===f);
+const grouped={};
+filtered.forEach(r=>{if(!grouped[r.date])grouped[r.date]=[];grouped[r.date].push(r)});
+const sortedDates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+
+let h=`<div style="padding:16px 18px 12px"><div style="font-size:21px;font-weight:600">☰ 消費紀錄</div></div>`;
+
+h+=`<div class="filter-row"><button class="filter-pill${f==="all"?" active":""}" data-filter="all">全部</button>`;
+CATEGORIES.forEach(c=>{h+=`<button class="filter-pill${f===c.id?" active":""}" data-filter="${c.id}">${c.icon} ${c.label}</button>`});
+h+=`</div>`;
+
+h+=`<div style="padding:0 14px">`;
+if(sortedDates.length===0){
+h+=`<div style="text-align:center;padding:40px 0;color:#9CA3AF;font-size:14px">還沒有消費紀錄</div>`;
+}else{
+sortedDates.forEach(date=>{
+const recs=grouped[date];
+const dayTotal=recs.reduce((s,r)=>s+r.amount,0);
+h+=`<div style="margin-bottom:16px"><div class="day-header"><span>${formatDateLabel(date)}</span><span>${formatKRW(dayTotal)}</span></div>`;
+recs.forEach(r=>{
+h+=`<div data-recid="${r.id}" class="rec-clickable" style="cursor:pointer">${renderRecordRow(r)}</div>`;
+if(state.confirmDelete===r.id){
+h+=`<div class="del-bar"><button class="del-btn" data-delconfirm="${r.id}">🗑 刪除</button><button class="cancel-btn" data-delcancel="1">取消</button></div>`;
+}
+});
+h+=`</div>`;
+});
+}
+h+=`</div>`;
+return h;
+}
+
+// ─── EVENTS ───
+function bindEvents(){
+document.querySelectorAll("[data-nav]").forEach(el=>{
+el.addEventListener("click",()=>{
+state.page=el.dataset.nav;
+if(el.dataset.nav==="add"){state.addForm={amount:"",storeName:"",category:"food",paymentId:state.payments[0].id,payMethod:state.payments[0].payMethods[0],note:"",date:getToday()}}
+state.confirmDelete=null;
+render();
+if(state.page==="add")setTimeout(()=>{const inp=document.querySelector('.amount-input');if(inp)inp.focus()},100);
+})
+});
+
+// Add page
+document.querySelectorAll("[data-field]").forEach(el=>{
+el.addEventListener("input",()=>{state.addForm[el.dataset.field]=el.value;render()})
+});
+document.querySelectorAll("[data-cat]").forEach(el=>{
+el.addEventListener("click",()=>{state.addForm.category=el.dataset.cat;render()})
+});
+document.querySelectorAll("[data-pay]").forEach(el=>{
+el.addEventListener("click",()=>{
+const p=getPay(el.dataset.pay);
+state.addForm.paymentId=el.dataset.pay;
+if(p&&p.payMethods.length===1)state.addForm.payMethod=p.payMethods[0];
+render();
+})
+});
+document.querySelectorAll("[data-method]").forEach(el=>{
+el.addEventListener("click",()=>{state.addForm.payMethod=el.dataset.method;render()})
+});
+
+const submitBtn=document.getElementById("submitBtn");
+if(submitBtn){
+submitBtn.addEventListener("click",()=>{
+const f=state.addForm;const amt=parseInt(f.amount);
+if(!amt||amt<=0){const area=document.getElementById("amountArea");if(area){area.classList.add("shake");setTimeout(()=>area.classList.remove("shake"),500)}return}
+const pay=getPay(f.paymentId);
+const ecb=pay&&pay.isFull?0:pay?pay.cashback:0;
+const record={id:Date.now().toString(),amount:amt,storeName:f.storeName,category:f.category,paymentId:f.paymentId,paymentName:pay?pay.name:"",payMethod:f.payMethod,note:f.note,date:f.date,effectiveCashback:ecb,createdAt:new Date().toISOString()};
+state.records.unshift(record);
+if(pay)pay.used+=amt;
+saveState();
+state.page="home";
+render();
+})
+}
+
+// Cards toggle
+document.querySelectorAll("[data-toggle]").forEach(el=>{
+el.addEventListener("click",()=>{
+const p=getPay(el.dataset.toggle);
+if(p){p.isFull=!p.isFull;saveState();render()}
+})
+});
+
+// Records
+document.querySelectorAll("[data-filter]").forEach(el=>{
+el.addEventListener("click",()=>{state.filter=el.dataset.filter;render()})
+});
+document.querySelectorAll(".rec-clickable").forEach(el=>{
+el.addEventListener("click",()=>{
+const id=el.dataset.recid;
+state.confirmDelete=state.confirmDelete===id?null:id;
+render();
+})
+});
+document.querySelectorAll("[data-delconfirm]").forEach(el=>{
+el.addEventListener("click",(e)=>{
+e.stopPropagation();
+const id=el.dataset.delconfirm;
+const rec=state.records.find(r=>r.id===id);
+if(rec){
+state.records=state.records.filter(r=>r.id!==id);
+const pay=getPay(rec.paymentId);
+if(pay)pay.used=Math.max(0,pay.used-rec.amount);
+saveState();
+}
+state.confirmDelete=null;
+render();
+})
+});
+document.querySelectorAll("[data-delcancel]").forEach(el=>{
+el.addEventListener("click",(e)=>{e.stopPropagation();state.confirmDelete=null;render()})
+});
+}
+
+// ─── INIT ───
+loadState();
+render();
+</script>
+</body>
+</html>
