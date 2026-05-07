@@ -230,7 +230,7 @@ const numVal=parseInt(f.amount)||0;
 let h=`<div class="flex items-center" style="justify-content:space-between;padding:12px 18px"><button class="back-btn" data-nav="home">✕</button><span style="font-size:16px;font-weight:600">新增消費</span><span style="width:32px"></span></div>`;
 
 h+=`<div id="amountArea" style="text-align:center;padding:18px 20px 22px"><div style="font-size:12px;color:#9CA3AF;margin-bottom:8px">消費金額</div><div class="flex items-center" style="justify-content:center;gap:4px"><span style="font-size:18px;color:#9CA3AF">₩</span><input type="number" inputmode="numeric" placeholder="0" value="${f.amount}" class="amount-input" data-field="amount"></div>`;
-if(numVal>0)h+=`<div style="font-size:13px;color:#9CA3AF;margin-top:6px">≈ ${formatTWD(krwToTwd(numVal))}</div>`;
+h+=`<div id="twdPreview" style="font-size:13px;color:#9CA3AF;margin-top:6px">${numVal>0?"≈ "+formatTWD(krwToTwd(numVal)):""}</div>`;
 h+=`</div>`;
 
 h+=`<div style="padding:0 18px">`;
@@ -258,10 +258,9 @@ h+=`<div class="field-group"><label class="field-label">日期</label><input typ
 
 h+=`<div class="field-group"><label class="field-label">備註 (選填)</label><input type="text" placeholder="例：午餐兩碗餃子湯" value="${f.note}" class="text-input" data-field="note"></div>`;
 
-if(numVal>0&&selPay){
-const cbAmt=selPay.isFull?0:Math.round(numVal*(selPay.cashback/100));
-h+=`<div class="cashback-preview"><span style="font-size:13px;color:#6B7280">預估回饋</span><span style="font-size:15px;font-weight:600;color:${selPay.isFull?"#DC2626":"#16A34A"}">${selPay.isFull?"無回饋 (已滿額)":formatKRW(cbAmt)+" ("+selPay.cashback+"%)"}</span></div>`;
-}
+const showCb=numVal>0&&selPay;
+const cbAmt=selPay?(selPay.isFull?0:Math.round(numVal*(selPay.cashback/100))):0;
+h+=`<div class="cashback-preview" id="cbPreview" style="display:${showCb?"flex":"none"}"><span style="font-size:13px;color:#6B7280">預估回饋</span><span id="cbValue" style="font-size:15px;font-weight:600;color:${selPay&&selPay.isFull?"#DC2626":"#16A34A"}">${selPay&&selPay.isFull?"無回饋 (已滿額)":formatKRW(cbAmt)+" ("+(selPay?selPay.cashback:0)+"%)"}</span></div>`;
 
 h+=`<button class="submit-btn" id="submitBtn">✓ 儲存紀錄</button>`;
 h+=`</div>`;
@@ -346,9 +345,27 @@ if(state.page==="add")setTimeout(()=>{const inp=document.querySelector('.amount-
 })
 });
 
-// Add page
+// Add page - update state without full re-render for text inputs
 document.querySelectorAll("[data-field]").forEach(el=>{
-el.addEventListener("input",()=>{state.addForm[el.dataset.field]=el.value;render()})
+el.addEventListener("input",()=>{
+state.addForm[el.dataset.field]=el.value;
+// Only update the TWD preview and cashback preview without full re-render
+if(el.dataset.field==="amount"){
+const numVal=parseInt(el.value)||0;
+const twdPreview=document.getElementById("twdPreview");
+if(twdPreview){twdPreview.textContent=numVal>0?"≈ "+formatTWD(krwToTwd(numVal)):"";}
+const cbPreview=document.getElementById("cbPreview");
+if(cbPreview){
+const selPay=getPay(state.addForm.paymentId);
+if(selPay&&numVal>0){
+cbPreview.style.display="flex";
+const cbAmt=selPay.isFull?0:Math.round(numVal*(selPay.cashback/100));
+document.getElementById("cbValue").textContent=selPay.isFull?"無回饋 (已滿額)":formatKRW(cbAmt)+" ("+selPay.cashback+"%)";
+document.getElementById("cbValue").style.color=selPay.isFull?"#DC2626":"#16A34A";
+}else{cbPreview.style.display="none";}
+}
+}
+})
 });
 document.querySelectorAll("[data-cat]").forEach(el=>{
 el.addEventListener("click",()=>{state.addForm.category=el.dataset.cat;render()})
